@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="טלפון חוגה">
+  <meta name="theme-color" content="#e8e0d0">
+  <title>טלפון חוגה</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Special+Elite&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      background: #e8e0d0;
+      font-family: 'Special Elite', serif;
+      overscroll-behavior: none;
+    }
+
+    .wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100dvh;
+      background: #e8e0d0;
+      padding: 1.5rem 1rem;
+    }
+
+    .display {
+      font-size: 26px;
+      letter-spacing: 0.2em;
+      color: #222;
+      background: #f5f0e8;
+      border: 1.5px solid #b0a080;
+      border-radius: 4px;
+      padding: 8px 24px;
+      min-width: 200px;
+      text-align: center;
+      min-height: 48px;
+      margin-bottom: 1.2rem;
+      box-shadow: inset 0 1px 4px rgba(0,0,0,0.15);
+      font-family: 'Special Elite', serif;
+    }
+
+    .phone-body {
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at 35% 30%, #f5f0e2, #d4c9a8);
+      border: 6px solid #c8ba90;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.25), inset 0 2px 6px rgba(255,255,255,0.5);
+    }
+
+    .dial-plate {
+      width: 250px;
+      height: 250px;
+      border-radius: 50%;
+      background: rgba(200,195,180,0.35);
+      border: 2px solid rgba(180,170,140,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .dial-svg-wrap {
+      width: 250px;
+      height: 250px;
+      position: relative;
+    }
+
+    .dial-svg-wrap svg { width: 100%; height: 100%; }
+
+    .peg {
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #888070;
+      border: 2px solid #a09080;
+      z-index: 10;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 1.2rem;
+    }
+
+    .btn {
+      font-family: 'Special Elite', serif;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      padding: 9px 18px;
+      border-radius: 4px;
+      border: 1.5px solid;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: opacity 0.15s;
+      background: transparent;
+    }
+    .btn:hover { opacity: 0.75; }
+    .btn-call { color: #1a6a10; border-color: #2a8a20; background: #eaf5e8; }
+    .btn-clear { color: #8a2010; border-color: #aa3020; background: #f5eae8; }
+
+    .status {
+      font-size: 12px;
+      color: #7a7060;
+      margin-top: 0.6rem;
+      height: 16px;
+      letter-spacing: 0.08em;
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="display" id="display">_</div>
+
+  <div class="phone-body">
+    <div class="dial-plate">
+      <div class="dial-svg-wrap">
+        <svg id="dialSvg" viewBox="0 0 250 250" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="125" cy="125" r="123" fill="rgba(210,200,175,0.4)" stroke="rgba(160,150,120,0.5)" stroke-width="1.5"/>
+          <circle cx="125" cy="125" r="48" fill="#2060b0" stroke="#1040a0" stroke-width="1.5"/>
+          <circle cx="125" cy="125" r="44" fill="none" stroke="#4080d0" stroke-width="0.8"/>
+          <text x="125" y="120" text-anchor="middle" fill="white" font-size="9" font-family="Arial, sans-serif" font-weight="bold">בזק</text>
+          <text x="125" y="132" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="7" font-family="Arial, sans-serif">☎</text>
+          <g id="holesGroup"></g>
+        </svg>
+      </div>
+      <div class="peg"></div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <a class="btn btn-call" id="callBtn" style="display:none" href="#">📞 התקשר</a>
+    <button class="btn btn-clear" id="clearBtn">✕ נקה</button>
+  </div>
+  <div class="status" id="status">לחץ על חור לחיוג</div>
+</div>
+
+<script>
+const cx = 125, cy = 125;
+const holeOrbit = 95;
+const holeR = 16;
+const digitOrder = ['1','2','3','4','5','6','7','8','9','0'];
+const pegAngleSVG = 90;
+const startAngle = pegAngleSVG - 20;
+const stepAngle = -33;
+
+const holesGroup = document.getElementById('holesGroup');
+let holeAngles = [];
+
+digitOrder.forEach((d, i) => {
+  const angleDeg = startAngle + stepAngle * i;
+  const angleRad = angleDeg * Math.PI / 180;
+  const hx = cx + holeOrbit * Math.cos(angleRad);
+  const hy = cy + holeOrbit * Math.sin(angleRad);
+  holeAngles.push(angleDeg);
+
+  const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  circle.setAttribute('cx', hx); circle.setAttribute('cy', hy);
+  circle.setAttribute('r', holeR);
+  circle.setAttribute('fill', '#f0ebe0');
+  circle.setAttribute('stroke', '#999080');
+  circle.setAttribute('stroke-width', 1.5);
+  holesGroup.appendChild(circle);
+
+  const txt = document.createElementNS('http://www.w3.org/2000/svg','text');
+  txt.setAttribute('x', hx); txt.setAttribute('y', hy + 5);
+  txt.setAttribute('text-anchor','middle');
+  txt.setAttribute('fill','#333');
+  txt.setAttribute('font-size', 14);
+  txt.setAttribute('font-family','Special Elite, serif');
+  txt.setAttribute('font-weight','500');
+  txt.setAttribute('pointer-events','none');
+  txt.textContent = d;
+  holesGroup.appendChild(txt);
+
+  const overlay = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  overlay.setAttribute('cx', hx); overlay.setAttribute('cy', hy);
+  overlay.setAttribute('r', holeR);
+  overlay.setAttribute('fill','transparent');
+  overlay.style.cursor = 'pointer';
+  overlay.addEventListener('click', () => dialDigit(d, i));
+  holesGroup.appendChild(overlay);
+});
+
+let number = '';
+let isAnimating = false;
+const display = document.getElementById('display');
+const callBtn = document.getElementById('callBtn');
+const clearBtn = document.getElementById('clearBtn');
+const statusEl = document.getElementById('status');
+
+function dialDigit(d, holeIndex) {
+  if (isAnimating || number.length >= 15) return;
+  isAnimating = true;
+
+  const holeAngle = holeAngles[holeIndex];
+  const rotNeeded = ((pegAngleSVG - holeAngle) + 360) % 360;
+  const duration = 300 + rotNeeded * 1.5;
+  const returnDuration = 250 + rotNeeded * 0.8;
+
+  statusEl.textContent = `מחייג ${d}...`;
+  const startTime = performance.now();
+
+  function easeOut(t) { return 1 - Math.pow(1-t, 2); }
+  function easeIn(t) { return t * t; }
+
+  function goForward(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const rotation = easeIn(progress) * rotNeeded;
+    holesGroup.style.transform = `rotate(${rotation}deg)`;
+    holesGroup.style.transformOrigin = `${cx}px ${cy}px`;
+    if (progress < 1) {
+      requestAnimationFrame(goForward);
+    } else {
+      const backStart = performance.now();
+      function goBack(now2) {
+        const el2 = now2 - backStart;
+        const pr2 = Math.min(el2 / returnDuration, 1);
+        const rotation2 = rotNeeded * (1 - easeOut(pr2));
+        holesGroup.style.transform = `rotate(${rotation2}deg)`;
+        holesGroup.style.transformOrigin = `${cx}px ${cy}px`;
+        if (pr2 < 1) {
+          requestAnimationFrame(goBack);
+        } else {
+          holesGroup.style.transform = '';
+          isAnimating = false;
+          number += d;
+          updateDisplay();
+        }
+      }
+      requestAnimationFrame(goBack);
+    }
+  }
+  requestAnimationFrame(goForward);
+}
+
+function updateDisplay() {
+  display.textContent = number || '_';
+  if (number.length > 0) {
+    callBtn.style.display = 'inline-flex';
+    callBtn.href = 'tel:' + number;
+    statusEl.textContent = number.length >= 7 ? 'לחץ על ירוק להתקשר' : 'המשך לחייג...';
+  } else {
+    callBtn.style.display = 'none';
+    statusEl.textContent = 'לחץ על חור לחיוג';
+  }
+}
+
+clearBtn.addEventListener('click', () => { number = ''; updateDisplay(); });
+callBtn.addEventListener('click', e => { if (!number) e.preventDefault(); });
+</script>
+</body>
+</html>
