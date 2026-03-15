@@ -16,6 +16,7 @@
       background: #e8e0d0;
       font-family: 'Special Elite', serif;
       overscroll-behavior: none;
+      touch-action: none;
     }
     .wrap {
       display: flex; flex-direction: column; align-items: center;
@@ -30,6 +31,7 @@
       box-shadow: inset 0 1px 4px rgba(0,0,0,0.15);
       font-family: 'Special Elite', serif;
     }
+    .svg-wrap { width: 100%; max-width: 340px; user-select: none; }
     .actions { display: flex; gap: 12px; margin-top: 1.2rem; }
     .btn {
       font-family: 'Special Elite', serif; font-size: 13px;
@@ -48,22 +50,24 @@
 <body>
 <div class="wrap">
   <div class="display" id="display">_</div>
-  <svg viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:340px;">
-    <circle cx="160" cy="160" r="155" fill="#f0e8d2" stroke="#c8ba90" stroke-width="5"/>
-    <circle cx="160" cy="160" r="142" fill="rgba(215,205,180,0.45)" stroke="rgba(170,155,120,0.6)" stroke-width="1.5"/>
-    <circle cx="160" cy="160" r="50" fill="#2060b0" stroke="#1040a0" stroke-width="1.5"/>
-    <circle cx="160" cy="160" r="46" fill="none" stroke="#4080d0" stroke-width="0.8"/>
-    <text x="160" y="156" text-anchor="middle" fill="white" font-size="11" font-family="Arial" font-weight="bold">בזק</text>
-    <text x="160" y="170" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9" font-family="Arial">☎</text>
-    <circle cx="160" cy="295" r="8" fill="#888070" stroke="#a09080" stroke-width="2"/>
-    <g id="holesGroup"></g>
-  </svg>
+  <div class="svg-wrap">
+    <svg id="dialSvg" viewBox="0 0 320 320" xmlns="http://www.w3.org/2000/svg" style="width:100%;touch-action:none;">
+      <circle cx="160" cy="160" r="155" fill="#f0e8d2" stroke="#c8ba90" stroke-width="5"/>
+      <circle cx="160" cy="160" r="142" fill="rgba(215,205,180,0.45)" stroke="rgba(170,155,120,0.6)" stroke-width="1.5"/>
+      <circle cx="160" cy="160" r="50" fill="#2060b0" stroke="#1040a0" stroke-width="1.5"/>
+      <circle cx="160" cy="160" r="46" fill="none" stroke="#4080d0" stroke-width="0.8"/>
+      <text x="160" y="156" text-anchor="middle" fill="white" font-size="11" font-family="Arial" font-weight="bold">בזק</text>
+      <text x="160" y="170" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9" font-family="Arial">☎</text>
+      <circle cx="160" cy="295" r="8" fill="#888070" stroke="#a09080" stroke-width="2"/>
+      <g id="holesGroup"></g>
+    </svg>
+  </div>
   <div class="actions">
     <a class="btn btn-call" id="callBtn" style="display:none" href="#">📞 התקשר</a>
     <button class="btn btn-clear" id="clearBtn">✕ נקה</button>
     <button class="btn btn-mute" id="muteBtn">🔊</button>
   </div>
-  <div class="status" id="status">לחץ על חור לחיוג</div>
+  <div class="status" id="status">הכנס אצבע לחור וגרור עם השעון</div>
 </div>
 
 <script>
@@ -102,52 +106,42 @@ function playReturn(n,ms){
   },ms*0.9);
 }
 
-const DCX=160, DCY=160, ORBIT=110, HOLE_R=14, PEG_ANGLE=90;
+const DCX=160, DCY=160, ORBIT=110, HOLE_R=14;
+const PEG_ANGLE=90;
+const angle0=115, angle1=330;
+const totalSpan=(angle1-angle0+360)%360;
+const step=totalSpan/9;
+const digitOrder=['0','9','8','7','6','5','4','3','2','1'];
+const holeAngles=[];
+const holesGroup=document.getElementById('holesGroup');
+const dialSvg=document.getElementById('dialSvg');
 
-const angle0 = 115;  // 0 — שמאל לפג
-const angle1 = 330;  // 1 — ימין כמעט למעלה
-const totalSpan = (angle1 - angle0 + 360) % 360; // 215°
-const step = totalSpan / 9;
-
-const digitOrder = ['0','9','8','7','6','5','4','3','2','1'];
-const holeAngles = [];
-const holesGroup = document.getElementById('holesGroup');
-
-digitOrder.forEach((d, i) => {
-  const angleDeg = (angle0 + step * i + 360) % 360;
+digitOrder.forEach((d,i)=>{
+  const angleDeg=(angle0+step*i+360)%360;
   holeAngles.push(angleDeg);
-  const angleRad = angleDeg * Math.PI / 180;
-  const hx = DCX + ORBIT * Math.cos(angleRad);
-  const hy = DCY + ORBIT * Math.sin(angleRad);
-
-  const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  const ar=angleDeg*Math.PI/180;
+  const hx=DCX+ORBIT*Math.cos(ar);
+  const hy=DCY+ORBIT*Math.sin(ar);
+  const circle=document.createElementNS('http://www.w3.org/2000/svg','circle');
   circle.setAttribute('cx',hx); circle.setAttribute('cy',hy);
-  circle.setAttribute('r',HOLE_R);
-  circle.setAttribute('fill','#f0ebe0');
-  circle.setAttribute('stroke','#999080');
-  circle.setAttribute('stroke-width',1.5);
+  circle.setAttribute('r',HOLE_R); circle.setAttribute('fill','#f0ebe0');
+  circle.setAttribute('stroke','#999080'); circle.setAttribute('stroke-width',1.5);
   holesGroup.appendChild(circle);
-
-  const txt = document.createElementNS('http://www.w3.org/2000/svg','text');
+  const txt=document.createElementNS('http://www.w3.org/2000/svg','text');
   txt.setAttribute('x',hx); txt.setAttribute('y',hy+5);
-  txt.setAttribute('text-anchor','middle');
-  txt.setAttribute('fill','#333');
-  txt.setAttribute('font-size',13);
-  txt.setAttribute('font-family','Special Elite, serif');
-  txt.setAttribute('pointer-events','none');
-  txt.textContent = d;
+  txt.setAttribute('text-anchor','middle'); txt.setAttribute('fill','#333');
+  txt.setAttribute('font-size',13); txt.setAttribute('font-family','Special Elite, serif');
+  txt.setAttribute('pointer-events','none'); txt.textContent=d;
   holesGroup.appendChild(txt);
-
-  const overlay = document.createElementNS('http://www.w3.org/2000/svg','circle');
-  overlay.setAttribute('cx',hx); overlay.setAttribute('cy',hy);
-  overlay.setAttribute('r',HOLE_R);
-  overlay.setAttribute('fill','transparent');
-  overlay.style.cursor='pointer';
-  overlay.addEventListener('click',()=>dialDigit(d,i));
-  holesGroup.appendChild(overlay);
 });
 
 let number='', isAnimating=false;
+let dragging=false, activeHoleIndex=-1;
+let currentRotation=0;
+let prevPointerAngle=0;
+let lastTickRotation=0;
+const TICK_INTERVAL=20;
+
 const display=document.getElementById('display');
 const callBtn=document.getElementById('callBtn');
 const clearBtn=document.getElementById('clearBtn');
@@ -156,38 +150,109 @@ const muteBtn=document.getElementById('muteBtn');
 
 muteBtn.addEventListener('click',()=>{ muted=!muted; muteBtn.textContent=muted?'🔇':'🔊'; });
 
-function dialDigit(d,holeIndex){
-  if(isAnimating||number.length>=15) return;
-  isAnimating=true;
-  const holeAngle=holeAngles[holeIndex];
-  const rotNeeded=((PEG_ANGLE-holeAngle)+360)%360;
-  const fwdDur=300+rotNeeded*1.5;
-  const retDur=180+rotNeeded*0.55;
-  const numTicks=Math.max(1,Math.round(rotNeeded/28));
-  statusEl.textContent=`מחייג ${d}...`;
-  for(let i=0;i<numTicks;i++) setTimeout(()=>playTick(0.28+Math.random()*0.1),(i/numTicks)*fwdDur*0.85);
-  const t0=performance.now();
-  const easeOut=t=>1-Math.pow(1-t,2);
-  const easeIn=t=>t*t;
-  function fwd(now){
-    const p=Math.min((now-t0)/fwdDur,1);
-    holesGroup.style.transform=`rotate(${easeIn(p)*rotNeeded}deg)`;
-    holesGroup.style.transformOrigin=`${DCX}px ${DCY}px`;
-    if(p<1){requestAnimationFrame(fwd);return;}
-    playReturn(numTicks+2,retDur);
-    const t1=performance.now();
-    function back(now2){
-      const p2=Math.min((now2-t1)/retDur,1);
-      holesGroup.style.transform=`rotate(${rotNeeded*(1-easeOut(p2))}deg)`;
-      holesGroup.style.transformOrigin=`${DCX}px ${DCY}px`;
-      if(p2<1){requestAnimationFrame(back);return;}
-      holesGroup.style.transform='';
-      isAnimating=false; number+=d; updateDisplay();
-    }
-    requestAnimationFrame(back);
-  }
-  requestAnimationFrame(fwd);
+function getSVGPoint(e){
+  const pt=dialSvg.createSVGPoint();
+  const src=e.touches?e.touches[0]:e;
+  pt.x=src.clientX; pt.y=src.clientY;
+  return pt.matrixTransform(dialSvg.getScreenCTM().inverse());
 }
+
+function pointAngle(p){
+  return (Math.atan2(p.y-DCY, p.x-DCX)*180/Math.PI+360)%360;
+}
+
+function findHole(p){
+  for(let i=0;i<holeAngles.length;i++){
+    const a=((holeAngles[i]+currentRotation)*Math.PI/180);
+    const hx=DCX+ORBIT*Math.cos(a);
+    const hy=DCY+ORBIT*Math.sin(a);
+    const dx=p.x-hx, dy=p.y-hy;
+    if(Math.sqrt(dx*dx+dy*dy)<HOLE_R*1.8) return i;
+  }
+  return -1;
+}
+
+function onPointerDown(e){
+  if(isAnimating) return;
+  const p=getSVGPoint(e);
+  const hi=findHole(p);
+  if(hi<0) return;
+  e.preventDefault();
+  dragging=true;
+  activeHoleIndex=hi;
+  currentRotation=0;
+  prevPointerAngle=pointAngle(p);
+  lastTickRotation=0;
+  statusEl.textContent=`גורר ${digitOrder[hi]}...`;
+}
+
+function onPointerMove(e){
+  if(!dragging||isAnimating) return;
+  e.preventDefault();
+  const p=getSVGPoint(e);
+  const nowAngle=pointAngle(p);
+
+  // Incremental delta, normalized to [-180, 180]
+  let delta=nowAngle-prevPointerAngle;
+  if(delta>180) delta-=360;
+  if(delta<-180) delta+=360;
+
+  // Only accumulate CW (positive) movement
+  if(delta>0){
+    const maxRot=((PEG_ANGLE-holeAngles[activeHoleIndex])+360)%360;
+    currentRotation=Math.min(currentRotation+delta, maxRot);
+    holesGroup.style.transform=`rotate(${currentRotation}deg)`;
+    holesGroup.style.transformOrigin=`${DCX}px ${DCY}px`;
+    const ticksPassed=Math.floor(currentRotation/TICK_INTERVAL);
+    const ticksLast=Math.floor(lastTickRotation/TICK_INTERVAL);
+    if(ticksPassed>ticksLast) playTick(0.3);
+    lastTickRotation=currentRotation;
+  }
+
+  prevPointerAngle=nowAngle;
+}
+
+function onPointerUp(){
+  if(!dragging) return;
+  dragging=false;
+  const rotReached=currentRotation;
+  const maxRot=((PEG_ANGLE-holeAngles[activeHoleIndex])+360)%360;
+  const digit=digitOrder[activeHoleIndex];
+  const dialed=rotReached>=maxRot*0.85;
+
+  isAnimating=true;
+  const retDur=150+rotReached*0.5;
+  const numTicks=Math.max(1,Math.round(rotReached/TICK_INTERVAL));
+  if(dialed) playReturn(numTicks, retDur);
+
+  const startRot=rotReached;
+  const t0=performance.now();
+  const easeOut=t=>1-Math.pow(1-t,3);
+  function back(now){
+    const p=Math.min((now-t0)/retDur,1);
+    const rot=startRot*(1-easeOut(p));
+    holesGroup.style.transform=`rotate(${rot}deg)`;
+    holesGroup.style.transformOrigin=`${DCX}px ${DCY}px`;
+    if(p<1){requestAnimationFrame(back);return;}
+    holesGroup.style.transform='';
+    currentRotation=0;
+    isAnimating=false;
+    if(dialed){ number+=digit; updateDisplay(); }
+    else {
+      statusEl.textContent='לא הגעת לסוף — נסה שוב';
+      setTimeout(()=>{ if(!dragging) statusEl.textContent='הכנס אצבע לחור וגרור עם השעון'; },1500);
+    }
+  }
+  requestAnimationFrame(back);
+  activeHoleIndex=-1;
+}
+
+dialSvg.addEventListener('mousedown',onPointerDown);
+window.addEventListener('mousemove',onPointerMove);
+window.addEventListener('mouseup',onPointerUp);
+dialSvg.addEventListener('touchstart',onPointerDown,{passive:false});
+window.addEventListener('touchmove',onPointerMove,{passive:false});
+window.addEventListener('touchend',onPointerUp);
 
 function updateDisplay(){
   display.textContent=number||'_';
@@ -196,11 +261,11 @@ function updateDisplay(){
     statusEl.textContent=number.length>=7?'לחץ על ירוק להתקשר':'המשך לחייג...';
   } else {
     callBtn.style.display='none';
-    statusEl.textContent='לחץ על חור לחיוג';
+    statusEl.textContent='הכנס אצבע לחור וגרור עם השעון';
   }
 }
-clearBtn.addEventListener('click',()=>{number='';updateDisplay();});
-callBtn.addEventListener('click',e=>{if(!number)e.preventDefault();});
+clearBtn.addEventListener('click',()=>{ number=''; updateDisplay(); });
+callBtn.addEventListener('click',e=>{ if(!number)e.preventDefault(); });
 </script>
 </body>
 </html>
