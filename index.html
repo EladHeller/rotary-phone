@@ -31,7 +31,7 @@
       box-shadow: inset 0 1px 4px rgba(0,0,0,0.15);
       font-family: 'Special Elite', serif;
     }
-    .svg-wrap { width: 100%; max-width: 340px; user-select: none; }
+    .svg-wrap { width: 100%; max-width: 340px; user-select: none; cursor: default; }
     .actions { display: flex; gap: 12px; margin-top: 1.2rem; }
     .btn {
       font-family: 'Special Elite', serif; font-size: 13px;
@@ -247,6 +247,13 @@ function onPointerUp(){
   activeHoleIndex=-1;
 }
 
+dialSvg.addEventListener('mousemove', e => {
+  if(dragging||isAnimating) return;
+  const p=getSVGPoint(e);
+  const hi=findHole(p);
+  dialSvg.style.cursor = hi>=0 ? 'pointer' : 'default';
+});
+dialSvg.addEventListener('mouseleave', () => { if(!dragging) dialSvg.style.cursor='default'; });
 dialSvg.addEventListener('mousedown',onPointerDown);
 window.addEventListener('mousemove',onPointerMove);
 window.addEventListener('mouseup',onPointerUp);
