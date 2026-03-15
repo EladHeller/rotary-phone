@@ -205,7 +205,10 @@ function onPointerMove(e){
     holesGroup.style.transformOrigin=`${DCX}px ${DCY}px`;
     const ticksPassed=Math.floor(currentRotation/TICK_INTERVAL);
     const ticksLast=Math.floor(lastTickRotation/TICK_INTERVAL);
-    if(ticksPassed>ticksLast) playTick(0.3);
+    if(ticksPassed>ticksLast){
+      playTick(0.3);
+      if(navigator.vibrate) navigator.vibrate(10);
+    }
     lastTickRotation=currentRotation;
   }
 
@@ -223,7 +226,10 @@ function onPointerUp(){
   isAnimating=true;
   const retDur=150+rotReached*0.5;
   const numTicks=Math.max(1,Math.round(rotReached/TICK_INTERVAL));
-  if(dialed) playReturn(numTicks, retDur);
+  if(dialed){
+    playReturn(numTicks, retDur);
+    if(navigator.vibrate) navigator.vibrate([30, 20, 30]);
+  }
 
   const startRot=rotReached;
   const t0=performance.now();
